@@ -1,0 +1,8 @@
+tag1Expected;tag2Expected;delay;match;comment
+101;NULL;;101+NULL;rule_n_01
+101;*;;101+STAR;rule_n_02
+101;;;101;rule_n_03
+102;201;;102-201;rule_n_04
+102;202;0;102-202;rule_n_05
+103;;1000;103;rule_n_06
+;;NO_RESPONSE

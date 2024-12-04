@@ -1,0 +1,16 @@
+- matchers:
+    tag1: "101"
+  acknowledgment: { "match": "101", "res": "dynamic" }
+- matchers:
+    tag1: "102"
+    tag2: "201"
+  acknowledgment: { "match": "102-201", "res": "dynamic" }
+- matchers:
+    tag1: "102"
+    tag2: "202"
+  acknowledgment: { "match": "102-202", "res": "dynamic" }
+- matchers:
+    tag1: "103"
+  acknowledgment: { "match": "103", "res": "dynamic" }
+- matchers:
+  delay-in-ms: NO_RESPONSE
