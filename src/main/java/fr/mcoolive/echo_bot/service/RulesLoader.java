@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 public class RulesLoader {
 
@@ -22,17 +23,17 @@ public class RulesLoader {
         this(new RulesLoaderFromCsv(), new RulesLoaderFromYaml());
     }
 
-    public List<Rule<Object, String>> loadRules(String path) throws UncheckedIOException {
+    public List<Rule<Map<String, Object>, Map<String, Object>>> loadRules(String path, long defaultDelay) throws UncheckedIOException {
         final Path pathFile = Paths.get(path);
         if (RulesLoader.isCsvFile(path)) {
             try (InputStream csv = Files.newInputStream(pathFile)) {
-                return csvLoader.loadRules(csv, path);
+                return csvLoader.loadRules(csv, path, defaultDelay);
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }
         } else if (RulesLoader.isYamlFile(path)) {
             try (InputStream yaml = Files.newInputStream(pathFile)) {
-                return yamlLoader.loadRules(yaml, path);
+                return yamlLoader.loadRules(yaml, path, defaultDelay);
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }
@@ -56,8 +57,8 @@ public class RulesLoader {
      * When the delay is missing, we return 0 that means "no-delay".
      * When the delay is not a number (NO_RESPONSE for example), we return -1 that means "no-response".
      */
-    static int parseDelay(String value) {
-        if (value == null || value.isEmpty()) return 0;
+    static long parseDelay(String value, long defaultDelay) {
+        if (value == null || value.isEmpty()) return defaultDelay;
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException ex) {

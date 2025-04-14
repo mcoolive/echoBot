@@ -3,9 +3,7 @@ package fr.mcoolive.echo_bot.service;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.HttpStatus.OK;
@@ -59,17 +57,33 @@ public class RulesEngineTest {
         void test_rules_engine() {
             Optional<Rule.Result<String>> result;
 
-            result = rulesEngine.execute("{ \"Tag1\": 1 }");
+            result = rulesEngine.execute(mapOf("Tag1", 1));
             assertTrue(result.isPresent());
             assertEquals(fallback, result.get().getOutput());
 
-            result = rulesEngine.execute("{ \"Tag1\": null }");
+            result = rulesEngine.execute(mapOf("Tag1", null));
             assertTrue(result.isPresent());
             assertEquals(fallback, result.get().getOutput());
 
-            result = rulesEngine.execute("{ \"Tag999\": 1 }");
+            result = rulesEngine.execute(mapOf("Tag999", 1));
             assertTrue(result.isPresent());
             assertEquals(fallback, result.get().getOutput());
         }
+    }
+
+    // TODO: can be replaced by Map.of (added in Java 9).
+    @SuppressWarnings("unchecked")
+    public static <K, V> Map<K, V> mapOf(Object... keyValues) {
+        if (keyValues.length % 2 != 0) {
+            throw new IllegalArgumentException("mapOf requires an even number of arguments (key-value pairs).");
+        }
+
+        Map<K, V> map = new HashMap<>();
+        for (int i = 0; i < keyValues.length; i += 2) {
+            K key = (K) keyValues[i];
+            V value = (V) keyValues[i + 1];
+            map.put(key, value);
+        }
+        return map;
     }
 }

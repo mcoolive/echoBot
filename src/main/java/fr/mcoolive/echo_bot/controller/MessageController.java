@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -27,18 +28,18 @@ public class MessageController {
     private final Logger LOGGER = LoggerFactory.getLogger(MessageController.class);
 
     @Autowired
-    private RulesEngine<Object, String> rulesEngine;
+    private RulesEngine<Map<String, Object>, Map<String, Object>> rulesEngine;
 
     @PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CompletableFuture<ResponseEntity<String>> post(@RequestBody String json, HttpServletResponse servletResponse) throws IOException {
-        final Optional<Rule.Result<String>> optResult = rulesEngine.execute(json);
+    public CompletableFuture<ResponseEntity<Map<String, Object>>> post(@RequestBody Map<String, Object> json, HttpServletResponse servletResponse) throws IOException {
+        final Optional<Rule.Result<Map<String, Object>>> optResult = rulesEngine.execute(json);
         if (!optResult.isPresent())
             return completedFuture(ResponseEntity.internalServerError().build());
 
-        final Rule.Result<String> result = optResult.get();
+        final Rule.Result<Map<String, Object>> result = optResult.get();
         LOGGER.debug(result.getExplanation());
 
-        final int delayInMs = result.getDelayInMs();
+        final long delayInMs = result.getDelayInMs();
         if (delayInMs < 0) {
             // FIXME: this closes the underlying TCP connection. Maybe we want to hang forever...
             servletResponse.setStatus(HttpServletResponse.SC_REQUEST_TIMEOUT);
@@ -46,7 +47,7 @@ public class MessageController {
             return null;
         }
 
-        final ResponseEntity<String> response = ResponseEntity
+        final ResponseEntity<Map<String, Object>> response = ResponseEntity
                 .status(result.getHttpStatus())
                 .body(result.getOutput());
 
@@ -62,7 +63,7 @@ public class MessageController {
         }
     }
 
-    private static <T> T delayedReturn(T t, int delayInMs) {
+    private static <T> T delayedReturn(T t, long delayInMs) {
         try {
             Thread.sleep(delayInMs);
         } catch (InterruptedException e) {

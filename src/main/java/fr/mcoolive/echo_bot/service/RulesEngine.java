@@ -1,6 +1,7 @@
 package fr.mcoolive.echo_bot.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -15,7 +16,7 @@ public interface RulesEngine<INPUT, OUTPUT> {
         return new Basic<>(rules);
     }
 
-    static <OUTPUT> RulesEngine<Object, OUTPUT> fallback(OUTPUT fallbackOutput) {
+    static <OUTPUT> RulesEngine<Map<String, Object>, OUTPUT> fallback(OUTPUT fallbackOutput) {
         return new Fallback<>(fallbackOutput);
     }
 
@@ -62,7 +63,7 @@ public interface RulesEngine<INPUT, OUTPUT> {
         }
     }
 
-    class Fallback<OUTPUT> implements RulesEngine<Object, OUTPUT> {
+    class Fallback<OUTPUT> implements RulesEngine<Map<String, Object>, OUTPUT> {
         private final Rule.Result<OUTPUT> result;
 
         public Fallback(Rule.Result<OUTPUT> result) {
@@ -74,7 +75,7 @@ public interface RulesEngine<INPUT, OUTPUT> {
             this(new Rule.Result<>(output, "Fallback result."));
         }
 
-        public Optional<Rule.Result<OUTPUT>> execute(Object input) {
+        public Optional<Rule.Result<OUTPUT>> execute(Map<String, Object> input) {
             return Optional.of(result);
         }
     }

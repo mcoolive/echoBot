@@ -1,7 +1,6 @@
 package fr.mcoolive.echo_bot;
 
 import fr.mcoolive.echo_bot.service.RulesEngine;
-import fr.mcoolive.echo_bot.service.RulesEngineFactory;
 import fr.mcoolive.echo_bot.service.RulesLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +10,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -31,9 +32,15 @@ public class WebhookConfiguration {
     }
 
     @Bean
-    RulesEngine<Object, String> getRulesEngine(RulesEngineFactory factory) {
+    RulesEngine<Map<String, Object>, Map<String, Object>> getRulesEngine(RulesLoader rulesLoader) {
         final List<String> cfgPaths = Arrays.asList("./src/test/resources/dynamic-response.csv", "./src/test/resources/dynamic-response.yaml");
-        final String fallbackOutput = "default";
-        return factory.newRulesEngine(cfgPaths, fallbackOutput);
+        final Map<String, Object> fallbackMap = new HashMap<String, Object>() {{
+            put("fall", "back");
+        }};
+        final RulesEngine<Map<String, Object>, Map<String, Object>> fallback = RulesEngine.fallback(fallbackMap);
+        return cfgPaths.stream()
+                .map(p -> rulesLoader.loadRules(p, 0L)).map(RulesEngine::basic)
+                .reduce(RulesEngine::andThen)
+                .map(e -> e.andThen(fallback)).orElse(fallback);
     }
 }

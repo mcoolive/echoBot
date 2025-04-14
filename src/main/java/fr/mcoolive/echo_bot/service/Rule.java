@@ -16,7 +16,7 @@ public class Rule<INPUT, OUTPUT> {
         this.result = result;
     }
 
-    public Rule(Predicate<? super INPUT> predicate, OUTPUT output, String explanation, int delayInMs, HttpStatus httpStatus) {
+    public Rule(Predicate<? super INPUT> predicate, OUTPUT output, String explanation, long delayInMs, HttpStatus httpStatus) {
         this(predicate, new Result<>(output, explanation, delayInMs, httpStatus));
     }
 
@@ -36,10 +36,10 @@ public class Rule<INPUT, OUTPUT> {
     public static class Result<OUTPUT> {
         private final OUTPUT output;
         private final String explanation;
-        private final int delayInMs;
+        private final long delayInMs;
         private final HttpStatus httpStatus;
 
-        public Result(OUTPUT output, String explanation, int delayInMs, HttpStatus httpStatus) {
+        public Result(OUTPUT output, String explanation, long delayInMs, HttpStatus httpStatus) {
             this.output = output;
             this.explanation = explanation;
             this.delayInMs = delayInMs;
@@ -50,6 +50,10 @@ public class Rule<INPUT, OUTPUT> {
             this(output, explanation, 0, HttpStatus.OK);
         }
 
+        public Result(OUTPUT output, Result<?> result) {
+            this(output, result.explanation, result.delayInMs, result.httpStatus);
+        }
+
         public OUTPUT getOutput() {
             return output;
         }
@@ -58,7 +62,7 @@ public class Rule<INPUT, OUTPUT> {
             return explanation;
         }
 
-        public int getDelayInMs() {
+        public long getDelayInMs() {
             return delayInMs;
         }
 

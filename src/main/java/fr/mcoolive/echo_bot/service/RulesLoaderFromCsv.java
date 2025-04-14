@@ -2,9 +2,7 @@ package fr.mcoolive.echo_bot.service;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
@@ -12,6 +10,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -35,8 +34,7 @@ public class RulesLoaderFromCsv {
      * @throws JacksonException if the file is not in the expected format
      * @throws IOException      if the file is not readable
      */
-    public List<Rule<Object, String>> loadRules(InputStream csv, String source) throws IOException {
-        final ObjectMapper jsonMapper = new ObjectMapper();
+    public List<Rule<Map<String, Object>, Map<String, Object>>> loadRules(InputStream csv, String source, long defaultDelay) throws IOException {
         final CsvMapper csvMapper = new CsvMapper();
 
         final CsvSchema csvSchema = CsvSchema.emptySchema()
@@ -48,12 +46,12 @@ public class RulesLoaderFromCsv {
                 .with(CsvParser.Feature.TRIM_SPACES);
 
         try (final MappingIterator<Map<String, String>> rowIterator = csvReader.readValues(csv)) {
-            final List<Rule<Object, String>> rules = new ArrayList<>();
+            final List<Rule<Map<String, Object>, Map<String, Object>>> rules = new ArrayList<>();
             while (rowIterator.hasNext()) {
                 final int lineNr = rowIterator.getCurrentLocation().getLineNr();
                 final Map<String, String> row = rowIterator.next();
                 final AndPredicate.Builder<Object> pb = new AndPredicate.Builder<>();
-                final ObjectNode outputObject = jsonMapper.createObjectNode();
+                final Map<String, Object> outputMap = new HashMap<>();
                 String scenarioId = null;
                 String delayInMs = null;
 
@@ -78,14 +76,13 @@ public class RulesLoaderFromCsv {
                     } else {
                         // Building the returned acknowledgement
                         if (!NULL_VALUE.equalsIgnoreCase(value)) {
-                            outputObject.put(key, value);
+                            outputMap.put(key, value);
                         }
                     }
                 }
 
-                final String outputString = outputObject.toString();
                 final String explanation = String.format("Dynamic result picked from CSV %s [scenarioId=%s, lineNr=%d].", source, scenarioId, lineNr);
-                rules.add(new Rule<>(pb.build(), outputString, explanation, RulesLoader.parseDelay(delayInMs), OK));
+                rules.add(new Rule<>(pb.build(), outputMap, explanation, RulesLoader.parseDelay(delayInMs, defaultDelay), OK));
             }
             return rules;
         }
